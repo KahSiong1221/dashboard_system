@@ -6,7 +6,9 @@
 #include <signal.h>
 #include <syslog.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <errno.h>
+#include <grp.h>
 #include "config.h"
 
 void mkdir_if_not_exists(char *, mode_t);

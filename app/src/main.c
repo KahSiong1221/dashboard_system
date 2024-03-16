@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
 
     openlog(LOG_IDENT, LOG_PID, LOG_USER);
 
-    mkdir_if_not_exists(STORAGE_DIR, 0660);
+    mkdir_if_not_exists(STORAGE_DIR, 0770);
     mkdir_if_not_exists(UPLOAD_DIR, 0660);
     mkdir_if_not_exists(BACKUP_DIR, 0660);
     mkdir_if_not_exists(REPORTING_DIR, 0640);

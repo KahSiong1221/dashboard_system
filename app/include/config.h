@@ -3,7 +3,9 @@
 
 // Syslog identification string
 #define LOG_IDENT "ss_daemon"
-
+// Linux group name
+#define GROUP_NAME "dashboard"
+// Dashboard system storage path
 #define STORAGE_DIR "/home/ss_storage/"
 // Shared upload directory path
 #define UPLOAD_DIR "/home/ss_storage/upload/"
