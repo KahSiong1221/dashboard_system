@@ -21,6 +21,7 @@ void mkdir_if_not_exists(char *dir_path, mode_t mode)
 
     if (dir_result != 0 && errno != EEXIST)
     {
+        printf("dir_result: %d, errono: %d\n", dir_result, errno);
         syslog(LOG_ERR, "[INIT] Failed to create %s: %m", dir_path);
         closelog();
         exit(EXIT_FAILURE);
