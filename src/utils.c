@@ -43,21 +43,21 @@ int check_upload(struct tm current_time)
         {
             if (errno == ENOENT)
             {
-                syslog(LOG_NOTICE, "{CHECK} %s haven't been uploaded yet", report_name);
+                syslog(LOG_NOTICE, "[CHECK] %s haven't been uploaded yet", report_name);
             }
             else
             {
-                syslog(LOG_ERR, "{CHECK} Failed to check %s: %m", report_name);
+                syslog(LOG_ERR, "[CHECK] Failed to check %s: %m", report_name);
             }
         }
     }
 
     if (count == NO_OF_DEPTS)
     {
-        syslog(LOG_INFO, "{CHECK} All reports are uploaded");
+        syslog(LOG_INFO, "[CHECK] All reports are uploaded");
     }
 
-    syslog(LOG_INFO, "{CHECK} Reports check complete");
+    syslog(LOG_INFO, "[CHECK] Reports check complete");
     close(dir_fd);
     return 0;
 }

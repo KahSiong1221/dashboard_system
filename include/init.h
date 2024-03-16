@@ -13,6 +13,6 @@
 
 void mkdir_if_not_exists(char *, mode_t);
 
-void daemon_init();
+void daemonize();
 
 #endif // INIT_H

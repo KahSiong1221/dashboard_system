@@ -27,20 +27,24 @@ void mkdir_if_not_exists(char *dir_path, mode_t mode)
     }
     else if (dir_result == 0)
     {
-        if (chown(dir_path, uid, gid) == -1)
+        if (chown(dir_path, uid, gid) < 0)
         {
             syslog(LOG_ERR, "[INIT] Failed to change ownership of %s: %m", dir_path);
             closelog();
             exit(EXIT_FAILURE);
         }
-        chmod(dir_path, mode);
-
+        if (chmod(dir_path, mode) < 0)
+        {
+            syslog(LOG_ERR, "[INIT] Failed to change permissions of %s: %m", dir_path);
+            closelog();
+            exit(EXIT_FAILURE);
+        }
         syslog(LOG_INFO, "[INIT] %s is set up successfully", dir_path);
     }
 }
 
 // Function to transform main process into a daemon
-void daemon_init()
+void daemonize()
 {
     pid_t pid;
 
