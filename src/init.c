@@ -33,7 +33,7 @@ void mkdir_if_not_exists(char *dir_path, mode_t mode)
             closelog();
             exit(EXIT_FAILURE);
         }
-        chmod(dir_path, 0770);
+        chmod(dir_path, mode);
 
         syslog(LOG_INFO, "[INIT] %s is set up successfully", dir_path);
     }
