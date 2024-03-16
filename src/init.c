@@ -3,7 +3,6 @@
 // Function to create directory if not exists
 void mkdir_if_not_exists(char *dir_path, mode_t mode)
 {
-    errno = 0;
     int dir_result = mkdir(dir_path, mode);
     struct group *grp;
     gid_t gid;
