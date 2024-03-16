@@ -3,30 +3,32 @@
 // Function to create directory if not exists
 void mkdir_if_not_exists(char *dir_path, mode_t mode)
 {
-    int dir_result = mkdir(dir_path, mode);
+    errno = 0;
     struct group *grp;
     gid_t gid;
     // root user
     uid_t uid = 0;
-
-    grp = getgrnam(GROUP_NAME);
-    if (grp == NULL)
-    {
-        syslog(LOG_ERR, "[INIT] Failed to get group id: %m");
-        closelog();
-        exit(EXIT_FAILURE);
-    }
-    gid = grp->gr_gid;
+    
+    int dir_result = mkdir(dir_path, mode);
 
     if (dir_result != 0 && errno != EEXIST)
     {
-        printf("dir_result: %d, errono: %d\n", dir_result, errno);
+        printf("dir_result: %d, errno: %d\n", dir_result, errno);
         syslog(LOG_ERR, "[INIT] Failed to create %s: %m", dir_path);
         closelog();
         exit(EXIT_FAILURE);
     }
     else if (dir_result == 0)
     {
+        grp = getgrnam(GROUP_NAME);
+        if (grp == NULL)
+        {
+            syslog(LOG_ERR, "[INIT] Failed to get group id: %m");
+            closelog();
+            exit(EXIT_FAILURE);
+        }
+        gid = grp->gr_gid;
+
         if (chown(dir_path, uid, gid) < 0)
         {
             syslog(LOG_ERR, "[INIT] Failed to change ownership of %s: %m", dir_path);
