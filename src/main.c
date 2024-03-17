@@ -11,7 +11,7 @@ void signal_handler(int sig)
         term_flag = 1;
         break;
     case SIGUSR1:
-        syslog(LOG_INFO, "Perform transfer task manually");
+        syslog(LOG_INFO, "Perform transfer and backup task manually");
         break;
     }
 }
