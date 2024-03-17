@@ -1,6 +1,6 @@
 #include "utils.h"
 
-void report_name_today(char *report_name, int str_size, char *report_prefix, struct tm current_time)
+void report_name_today(char *report_name, int str_size, const char *report_prefix, struct tm current_time)
 {
     snprintf(
         report_name,
@@ -16,7 +16,7 @@ void report_name_today(char *report_name, int str_size, char *report_prefix, str
 void check_upload(struct tm current_time)
 {
     int dir_fd = open(UPLOAD_DIR, O_RDONLY);
-    char *report_prefixes[] = {REPORT_PREFIXES};
+    const char *report_prefixes[] = {REPORT_PREFIXES};
     int count = 0;
 
     syslog(LOG_INFO, "[CHECK] Performing reports check in Upload directory...");
@@ -77,10 +77,12 @@ int unlock_dir(char *dir_path, mode_t mode)
     if (chmod(dir_path, mode) < 0)
     {
         syslog(LOG_ERR, "[TRANSFER] Failed to unlock %s: %m", dir_path);
+        return -1;
     }
+    return 0;
 }
 
-int is_report(const char *filename, const char *report_names[])
+int is_report(const char *filename, char *report_names[])
 {
     for (int i = 0; i < NO_OF_DEPTS; ++i)
     {
