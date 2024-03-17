@@ -9,10 +9,10 @@ CFLAGS = -Wall -g -I$(IDIR)
 
 LIBS = -lm
 
-_DEPS = main.h init.h utils.h dir_monitor.h config.h
+_DEPS = main.h init.h utils.h dir_monitor.h signal_handler.h config.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = main.o init.o utils.o dir_monitor.o
+_OBJ = main.o init.o utils.o dir_monitor.o signal_handler.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 $(ODIR)/%.o: %.c $(DEPS)

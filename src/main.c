@@ -1,9 +1,5 @@
 #include "main.h"
 
-// TODO: create a controller c program
-//  to start/stop a daemon, check if it exists first
-//  also to manually backup/transfer file/grant access to reporting dir
-//
 int main(int argc, char *argv[])
 {
     time_t now;
@@ -20,12 +16,9 @@ int main(int argc, char *argv[])
     // Transform into a daemon process
     daemonize();
 
-    // TODO: initialise a signal handler
-
-    // TODO: in the signal handler
-    //    perform backup when get signal1
-    //    perform transfer when get signal2
-    // TODO: a separate program to receive signal from user in CLI
+    // Register signals
+    signal(SIGTERM, signal_handler);
+    signal(SIGUSR1, signal_handler);
 
     // Initialise a directory monitor in a child process
     dir_monitor_pid = fork();
@@ -65,7 +58,7 @@ int main(int argc, char *argv[])
             }
         }
         // if its 1pm, lock upload and report folders
-        if (current_time->tm_hour == 20 && current_time->tm_min == 10)
+        if (current_time->tm_hour == 1 && current_time->tm_min == 0)
         {
             pid_t child_pid = fork();
             // if fork fails
@@ -143,9 +136,4 @@ int main(int argc, char *argv[])
         }
         sleep(60);
     }
-
-    syslog(LOG_INFO, "Daemon terminated");
-    closelog();
-
-    return EXIT_SUCCESS;
 }
