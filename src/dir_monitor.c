@@ -1,11 +1,17 @@
 #include "dir_monitor.h"
 
+volatile sig_atomic_t monitor_term_flag = 0;
+
 void monitor_signal_handler(int sig)
 {
     switch (sig)
     {
     case SIGTERM:
         syslog(LOG_DEBUG, "I'm here yo, i got term sig");
+        monitor_term_flag = 1;
+        break;
+    case SIGUSR2:
+        syslog(LOG_DEBUG, "sdfgd");
         monitor_term_flag = 1;
         break;
     }
@@ -20,6 +26,7 @@ void dir_monitor()
     struct inotify_event *event;
 
     signal(SIGTERM, monitor_signal_handler);
+    signal(SIGUSR2, monitor_signal_handler);
 
     inotify_fd = inotify_init();
 

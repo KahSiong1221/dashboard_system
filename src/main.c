@@ -1,7 +1,6 @@
 #include "main.h"
 
 volatile sig_atomic_t term_flag = 0;
-volatile sig_atomic_t monitor_term_flag = 0;
 
 void signal_handler(int sig)
 {
@@ -9,7 +8,6 @@ void signal_handler(int sig)
     {
     case SIGTERM:
         syslog(LOG_INFO, "Daemon received termination signal %d. Shutting down gracefully", sig);
-        monitor_term_flag = 1;
         term_flag = 1;
         break;
     case SIGUSR1:
@@ -160,7 +158,7 @@ int main(int argc, char *argv[])
 
     syslog(LOG_DEBUG, "I'm here yo, that pid is %d", dir_monitor_pid);
 
-    if (kill(dir_monitor_pid, SIGTERM) < 0)
+    if (kill(dir_monitor_pid, SIGUSR2) < 0)
     {
         syslog(LOG_ERR, "Failed to send termination signal to directory monitor");
     }
