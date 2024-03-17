@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
     // Parent process: Main daemon
     daemon_work();
 
-    syslog(LOG_DEBUG, "I'm here yo");
+    syslog(LOG_DEBUG, "I'm here yo, that pid is %d", dir_monitor_pid);
 
     if (kill(dir_monitor_pid, SIGTERM) < 0)
     {
