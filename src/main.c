@@ -95,6 +95,8 @@ int main(int argc, char *argv[])
                     }
                 }
                 
+                syslog(LOG_INFO, "[TRANSFER] Locked %s and %s for reports transfer and backup", UPLOAD_DIR, REPORTING_DIR);
+
                 pid_t cchild_pid;
 
                 cchild_pid = fork();
@@ -133,6 +135,8 @@ int main(int argc, char *argv[])
                         exit(EXIT_FAILURE);
                     }
                 }
+
+                syslog(LOG_INFO, "[TRANSFER] Unlocked %s and %s", UPLOAD_DIR, REPORTING_DIR);
 
                 exit(EXIT_SUCCESS);
             }
