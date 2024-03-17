@@ -96,7 +96,7 @@ int is_report(const char *filename, char report_names[NO_OF_DEPTS][100])
 
 void copy_report(const char *source_path, const char *target_path)
 {
-    execlp("/bin/cp", "cp", source_path, target_path, (char *)0);
+    execl("/bin/cp", "cp", source_path, target_path, NULL);
     // if execl failed
     syslog(LOG_ERR, "[Transfer] Failed to copy %s to %s: %m", source_path, target_path);
     exit(EXIT_FAILURE);
@@ -104,7 +104,7 @@ void copy_report(const char *source_path, const char *target_path)
 
 void remove_report(const char *source_path)
 {
-    execlp("/bin/rm", "rm", source_path, NULL);
+    execl("/bin/rm", "rm", source_path, NULL);
     // if execl failed
     syslog(LOG_ERR, "[Transfer] Failed to remove %s: %m", source_path);
     exit(EXIT_FAILURE);
@@ -115,7 +115,7 @@ void auto_backup_transfer_reports(struct tm timeinfo)
     const char *report_prefixes[] = {REPORT_PREFIXES};
     char report_names[NO_OF_DEPTS][100];
     int report_status[NO_OF_DEPTS] = {0, 0, 0, 0};
-    int transfer_status, backup_status, job_status = 0;
+    int job_status = 0;
 
     for (int i = 0; i < NO_OF_DEPTS; i++)
     {
@@ -152,7 +152,7 @@ void auto_backup_transfer_reports(struct tm timeinfo)
         snprintf(source_path, sizeof(source_path), "%s/%s", UPLOAD_DIR, filename);
 
         pid_t transfer_pid = fork();
-        
+
         if (transfer_pid < 0)
         {
             syslog(LOG_ERR, "[TRANSFER] Failed to fork transfer process for %s", filename);
@@ -165,7 +165,6 @@ void auto_backup_transfer_reports(struct tm timeinfo)
         }
 
         pid_t backup_pid = fork();
-        
 
         if (backup_pid < 0)
         {
@@ -179,24 +178,10 @@ void auto_backup_transfer_reports(struct tm timeinfo)
         }
 
         // Parent process: Auto backup & transfer reports
-        waitpid(transfer_pid, &transfer_status, WNOHANG);
-        waitpid(backup_pid, &backup_status, WNOHANG);
+        waitpid(transfer_pid, NULL, 0);
+        waitpid(backup_pid, NULL, 0);
 
-        syslog(LOG_DEBUG, "[DEBUG] transfer_status exit: %d", WIFEXITED(transfer_status));
-        syslog(LOG_DEBUG, "[DEBUG] transfer_status: %d", WEXITSTATUS(transfer_status));
-        if (WIFEXITED(transfer_status) && WEXITSTATUS(transfer_status) == 0)
-        {
-            report_status[report_index]++;
-        }
-        syslog(LOG_DEBUG, "[DEBUG] backup_status exit: %d", WIFEXITED(backup_status));
-        syslog(LOG_DEBUG, "[DEBUG] backup_status: %d", WEXITSTATUS(backup_status));
-
-        if (WIFEXITED(backup_status) && WEXITSTATUS(backup_status))
-        {
-            report_status[report_index] += 2;
-        }
-
-        syslog(LOG_DEBUG, "[DEBUG] report status: %d %d %d %d", report_status[0], report_status[1], report_status[2], report_status[3]);
+        report_status[report_index]++;
 
         pid_t clean_pid = fork();
 
@@ -215,8 +200,6 @@ void auto_backup_transfer_reports(struct tm timeinfo)
         waitpid(clean_pid, NULL, 0);
     }
 
-    syslog(LOG_DEBUG, "[DEBUG] report status: %d %d %d %d", report_status[0], report_status[1], report_status[2], report_status[3]);
-
     for (int i = 0; i < NO_OF_DEPTS; i++)
     {
         job_status += report_status[i];
@@ -227,7 +210,7 @@ void auto_backup_transfer_reports(struct tm timeinfo)
         }
     }
 
-    if (job_status == 3 * NO_OF_DEPTS)
+    if (job_status == NO_OF_DEPTS)
     {
         syslog(LOG_INFO, "[TRANSFER] All reports are transferred and backed-up successfully");
     }
