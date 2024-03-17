@@ -8,12 +8,11 @@ void mkdir_if_not_exists(char *dir_path, mode_t mode)
     gid_t gid;
     // root user
     uid_t uid = 0;
-    
+
     int dir_result = mkdir(dir_path, mode);
 
     if (dir_result != 0 && errno != EEXIST)
     {
-        printf("dir_result: %d, errno: %d\n", dir_result, errno);
         syslog(LOG_ERR, "[INIT] Failed to create %s: %m", dir_path);
         closelog();
         exit(EXIT_FAILURE);

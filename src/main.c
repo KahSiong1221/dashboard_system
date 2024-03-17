@@ -10,6 +10,7 @@ int main(int argc, char *argv[])
     struct tm *current_time;
     bool is_checked = false;
     bool is_transferred = false;
+    pid_t dir_monitor_pid;
 
     openlog(LOG_IDENT, LOG_PID, LOG_USER);
 
@@ -21,7 +22,6 @@ int main(int argc, char *argv[])
     // Transform into a daemon process
     daemonize();
 
-    // TODO: initialise a directory monitor
     // TODO: initialise a signal handler
 
     // TODO: in the signal handler
@@ -29,13 +29,28 @@ int main(int argc, char *argv[])
     //    perform transfer when get signal2
     // TODO: a separate program to receive signal from user in CLI
 
-    // Main loop: stay for 2 minutes
+
+    // Initialise a directory monitor in a child process
+    dir_monitor_pid = fork();
+    // Exit if fork fails
+    if (dir_monitor_pid < 0)
+    {
+        syslog(LOG_ERR, "[INIT] Failed to fork process");
+        closelog();
+        exit(EXIT_FAILURE);
+    }
+    // Child process: Directory monitor
+    if (dir_monitor_pid == 0) {
+        dir_monitor();
+    }
+
+    // Parent process: Main daemon
     while (1)
     {
         // get current time
         now = time(NULL);
         current_time = localtime(&now);
-        check_upload(*current_time);
+
         // if its 11.30pm, check if they upload reports
         if (current_time->tm_hour == 23 && current_time->tm_min >= 30 && is_checked == false)
         {

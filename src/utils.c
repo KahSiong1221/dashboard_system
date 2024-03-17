@@ -19,11 +19,11 @@ int check_upload(struct tm current_time)
     char *report_prefixes[] = {REPORT_PREFIXES};
     int count = 0;
 
-    syslog(LOG_INFO, "{CHECK} Performing reports check in Upload directory...");
+    syslog(LOG_INFO, "[CHECK] Performing reports check in Upload directory...");
 
     if (dir_fd == -1)
     {
-        syslog(LOG_ERR, "{CHECK} Failed to open %s directory: %m", UPLOAD_DIR);
+        syslog(LOG_ERR, "[CHECK] Failed to open %s directory: %m", UPLOAD_DIR);
         return -1;
     }
 
