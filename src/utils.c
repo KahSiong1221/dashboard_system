@@ -189,10 +189,13 @@ void auto_backup_transfer_reports(struct tm timeinfo)
         waitpid(transfer_pid, &transfer_status, 0);
         waitpid(backup_pid, &backup_status, 0);
 
+        syslog(LOG_DEBUG, "[DEBUG] transfer_status: %d", WEXITSTATUS(transfer_status));
         if (WIFEXITED(transfer_status) && WEXITSTATUS(transfer_status) == 0)
         {
             report_status[report_index]++;
         }
+        syslog(LOG_DEBUG, "[DEBUG] backup_status: %d", WEXITSTATUS(backup_status));
+
         if (WIFEXITED(backup_status) && WEXITSTATUS(backup_status))
         {
             report_status[report_index] += 2;
