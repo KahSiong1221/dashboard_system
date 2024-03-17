@@ -82,7 +82,7 @@ int unlock_dir(char *dir_path, mode_t mode)
     return 0;
 }
 
-int is_report(const char *filename, char *report_names[])
+int is_report(const char *filename, char report_names[NO_OF_DEPTS][100])
 {
     for (int i = 0; i < NO_OF_DEPTS; ++i)
     {
