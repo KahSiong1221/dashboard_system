@@ -9,8 +9,10 @@ void signal_handler(int sig)
         case SIGTERM:
             syslog(LOG_INFO, "Daemon received termination signal %d. Shutting down gracefully", sig);
             term_flag = 1;
+            break;
         case SIGUSR1:
             syslog(LOG_INFO, "Perform transfer task manually");
+            break;
     }
 }
 

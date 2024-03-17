@@ -8,6 +8,7 @@ void monitor_signal_handler(int sig)
     {
         case SIGTERM:
             monitor_term_flag = 1;
+            break;
     }
 }
 
