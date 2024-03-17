@@ -1,6 +1,7 @@
 #include "main.h"
 
 volatile sig_atomic_t term_flag = 0;
+volatile sig_atomic_t monitor_term_flag = 0;
 
 void signal_handler(int sig)
 {
@@ -8,6 +9,7 @@ void signal_handler(int sig)
     {
     case SIGTERM:
         syslog(LOG_INFO, "Daemon received termination signal %d. Shutting down gracefully", sig);
+        monitor_term_flag = 1;
         term_flag = 1;
         break;
     case SIGUSR1:
