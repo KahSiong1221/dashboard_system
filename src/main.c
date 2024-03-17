@@ -4,15 +4,15 @@ volatile sig_atomic_t term_flag = 0;
 
 void signal_handler(int sig)
 {
-    switch(sig)
+    switch (sig)
     {
-        case SIGTERM:
-            syslog(LOG_INFO, "Daemon received termination signal %d. Shutting down gracefully", sig);
-            term_flag = 1;
-            break;
-        case SIGUSR1:
-            syslog(LOG_INFO, "Perform transfer task manually");
-            break;
+    case SIGTERM:
+        syslog(LOG_INFO, "Daemon received termination signal %d. Shutting down gracefully", sig);
+        term_flag = 1;
+        break;
+    case SIGUSR1:
+        syslog(LOG_INFO, "Perform transfer task manually");
+        break;
     }
 }
 
@@ -155,6 +155,8 @@ int main(int argc, char *argv[])
 
     // Parent process: Main daemon
     daemon_work();
+
+    syslog(LOG_DEBUG, "I'm here yo");
 
     if (kill(dir_monitor_pid, SIGTERM) < 0)
     {
