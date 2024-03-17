@@ -7,10 +7,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <signal.h>
 #include "init.h"
 #include "config.h"
 #include "utils.h"
 #include "dir_monitor.h"
-#include "signal_handler.h"
 
 #endif // MAIN_H

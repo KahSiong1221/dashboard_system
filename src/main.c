@@ -1,46 +1,26 @@
 #include "main.h"
 
-int main(int argc, char *argv[])
+volatile sig_atomic_t term_flag = 0;
+
+void signal_handler(int sig)
 {
-    time_t now;
-    struct tm *current_time;
-    pid_t dir_monitor_pid;
-
-    openlog(LOG_IDENT, LOG_PID, LOG_USER);
-
-    mkdir_if_not_exists(STORAGE_DIR, 0770);
-    mkdir_if_not_exists(UPLOAD_DIR, 0770);
-    mkdir_if_not_exists(BACKUP_DIR, 0770);
-    mkdir_if_not_exists(REPORTING_DIR, 0750);
-
-    // Transform into a daemon process
-    daemonize();
-
-    // Register signals
-    signal(SIGTERM, signal_handler);
-    signal(SIGUSR1, signal_handler);
-
-    // Initialise a directory monitor in a child process
-    dir_monitor_pid = fork();
-    // Exit if fork fails
-    if (dir_monitor_pid < 0)
+    switch(sig)
     {
-        syslog(LOG_ERR, "[INIT] Failed to fork directory monitoring process");
-        closelog();
-        exit(EXIT_FAILURE);
+        case SIGTERM:
+            syslog(LOG_INFO, "Daemon received termination signal %d. Shutting down gracefully", sig);
+            term_flag = 1;
+        case SIGUSR1:
+            syslog(LOG_INFO, "Perform transfer task manually");
     }
-    // Child process: Directory monitor
-    if (dir_monitor_pid == 0)
-    {
-        dir_monitor();
-    }
+}
 
-    // Parent process: Main daemon
-    while (1)
+void daemon_work()
+{
+    while (!term_flag)
     {
         // get current time
-        now = time(NULL);
-        current_time = localtime(&now);
+        time_t now = time(NULL);
+        struct tm *current_time = localtime(&now);
 
         // if its 11.30pm, check if they upload reports
         if (current_time->tm_hour == 23 && current_time->tm_min == 30)
@@ -136,4 +116,52 @@ int main(int argc, char *argv[])
         }
         sleep(60);
     }
+}
+
+int main(int argc, char *argv[])
+{
+    pid_t dir_monitor_pid;
+
+    openlog(LOG_IDENT, LOG_PID, LOG_USER);
+
+    mkdir_if_not_exists(STORAGE_DIR, 0770);
+    mkdir_if_not_exists(UPLOAD_DIR, 0770);
+    mkdir_if_not_exists(BACKUP_DIR, 0770);
+    mkdir_if_not_exists(REPORTING_DIR, 0750);
+
+    // Transform into a daemon process
+    daemonize();
+
+    // Register signals
+    signal(SIGTERM, signal_handler);
+    signal(SIGUSR1, signal_handler);
+
+    // Initialise a directory monitor in a child process
+    dir_monitor_pid = fork();
+    // Exit if fork fails
+    if (dir_monitor_pid < 0)
+    {
+        syslog(LOG_ERR, "[INIT] Failed to fork directory monitoring process");
+        closelog();
+        exit(EXIT_FAILURE);
+    }
+    // Child process: Directory monitor
+    if (dir_monitor_pid == 0)
+    {
+        dir_monitor();
+    }
+
+    // Parent process: Main daemon
+    daemon_work();
+
+    if (kill(dir_monitor_pid, SIGTERM) < 0)
+    {
+        syslog(LOG_ERR, "Failed to send termination signal to directory monitor");
+    }
+
+    waitpid(dir_monitor_pid, NULL, 0);
+
+    syslog(LOG_INFO, "Daemon shutting down");
+    closelog();
+    exit(EXIT_SUCCESS);
 }

@@ -1,5 +1,16 @@
 #include "dir_monitor.h"
 
+volatile sig_atomic_t monitor_term_flag = 0;
+
+void monitor_signal_handler(int sig)
+{
+    switch(sig)
+    {
+        case SIGTERM:
+            monitor_term_flag = 1;
+    }
+}
+
 void dir_monitor()
 {
     errno = 0;
@@ -7,6 +18,8 @@ void dir_monitor()
     char buffer[BUFFER_LEN];
     ssize_t bytes_read;
     struct inotify_event *event;
+
+    signal(SIGTERM, monitor_signal_handler);
 
     inotify_fd = inotify_init();
 
@@ -29,7 +42,7 @@ void dir_monitor()
 
     syslog(LOG_INFO, "[MONITOR] Monitoring directory %s", UPLOAD_DIR);
 
-    while (1)
+    while (!monitor_term_flag)
     {
         i = 0;
         bytes_read = read(inotify_fd, buffer, BUFFER_LEN);
@@ -70,6 +83,10 @@ void dir_monitor()
             i += EVENT_SIZE + event->len;
         }
     }
+
     inotify_rm_watch(inotify_fd, wd);
     close(inotify_fd);
+
+    syslog(LOG_INFO, "[MONITOR] Directory monitor shutting down");
+    exit(EXIT_SUCCESS);
 }
