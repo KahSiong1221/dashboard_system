@@ -13,7 +13,7 @@ void report_name_today(char *report_name, int str_size, char *report_prefix, str
         REPORT_FILE_EXT);
 }
 
-int check_upload(struct tm current_time)
+void check_upload(struct tm current_time)
 {
     int dir_fd = open(UPLOAD_DIR, O_RDONLY);
     char *report_prefixes[] = {REPORT_PREFIXES};
@@ -24,7 +24,7 @@ int check_upload(struct tm current_time)
     if (dir_fd == -1)
     {
         syslog(LOG_ERR, "[CHECK] Failed to open %s directory: %m", UPLOAD_DIR);
-        return -1;
+        exit(EXIT_FAILURE);
     }
 
     for (int i = 0; i < NO_OF_DEPTS; i++)
@@ -59,5 +59,149 @@ int check_upload(struct tm current_time)
 
     syslog(LOG_INFO, "[CHECK] Reports check complete");
     close(dir_fd);
+    exit(EXIT_SUCCESS);
+}
+
+int lock_dir(char *dir_path)
+{
+    if (chmod(dir_path, 0550) < 0)
+    {
+        syslog(LOG_ERR, "[TRANSFER] Failed to lock %s: %m", dir_path);
+        return -1;
+    }
     return 0;
+}
+
+int unlock_dir(char *dir_path, mode_t mode)
+{
+    if (chmod(dir_path, mode) < 0)
+    {
+        syslog(LOG_ERR, "[TRANSFER] Failed to unlock %s: %m", dir_path);
+    }
+}
+
+int is_report(const char *filename, const char *report_names[])
+{
+    for (int i = 0; i < NO_OF_DEPTS; ++i)
+    {
+        if(strcmp(filename, report_names[i]) == 0)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void copy_report(const char *source_path, const char *target_path)
+{
+    execl("/bin/cp", "cp", source_path, target_path, NULL);
+    // if execl failed
+    syslog(LOG_ERR, "[Transfer] Failed to copy %s to %s: %m", source_path, target_path);
+    exit(EXIT_FAILURE);
+}
+
+void auto_backup_transfer_reports(struct tm timeinfo)
+{
+    const char *report_prefixes[] = {REPORT_PREFIXES};
+    char report_names[NO_OF_DEPTS][100];
+    int report_status[NO_OF_DEPTS] = {0, 0, 0, 0};
+    int job_status = 0;
+    
+    for (int i = 0; i < NO_OF_DEPTS; i++)
+    {
+        report_name_today(report_names[i], sizeof(report_names[i]), report_prefixes[i], timeinfo);
+    }
+    
+    DIR *dir = opendir(UPLOAD_DIR);
+    struct dirent *entry;
+
+    if (dir == NULL)
+    {
+        syslog(LOG_ERR, "[TRANSFER] Failed to open %s: %m", UPLOAD_DIR);
+        exit(EXIT_FAILURE);
+    }
+
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+        {
+            continue;
+        }
+
+        const char *filename = entry->d_name;
+        int report_index = is_report(filename, report_names);
+
+        if (report_index < 0)
+        {
+            continue;
+        }
+
+        char source_path[256];
+        char backup_path[256];
+        char reporting_path[256];
+
+        snprintf(source_path, sizeof(source_path), "%s/%s", UPLOAD_DIR, filename);
+        snprintf(backup_path, sizeof(backup_path), "%s/%s", BACKUP_DIR, filename);
+        snprintf(reporting_path, sizeof(reporting_path), "%s/%s", REPORTING_DIR, filename);
+
+        pid_t transfer_pid = fork();
+        int transfer_status;
+
+        if (transfer_pid < 0)
+        {
+            syslog(LOG_ERR, "[TRANSFER] Failed to fork transfer process for %s", filename);
+            continue;
+        }
+        // Child process: Transfer reports
+        if (transfer_pid == 0)
+        {
+            copy_reports(source_path, reporting_path);
+            exit(EXIT_SUCCESS);
+        }
+
+        pid_t backup_pid = fork();
+        int backup_status;
+
+        if (backup_pid < 0)
+        {
+            syslog(LOG_ERR, "[TRANSFER] Failed to fork backup process for %s", filename);
+            continue;
+        }
+        // Child process: Backup reports
+        if (backup_pid == 0)
+        {
+            copy_reports(source_path, backup_path);
+            exit(EXIT_SUCCESS);
+        }
+
+        // Parent process: Auto backup & transfer reports
+        waitpid(transfer_pid, &transfer_status, 0);
+        waitpid(backup_pid, &backup_status, 0);
+
+        if (WIFEXITED(transfer_status) && WEXITSTATUS(transfer_status) == 0)
+        {
+            report_status[report_index]++;
+        }
+        if (WIFEXITED(backup_status) && WEXITSTATUS(backup_status))
+        {
+            report_status[report_index] += 2;
+        }
+    }
+    
+    for (int i = 0; i < NO_OF_DEPTS; i++)
+    {
+        job_status += report_status[i];
+
+        if (report_status[i] == 0)
+        {
+            syslog(LOG_NOTICE, "[TRANSFER] %s not found in %s", report_names[i], UPLOAD_DIR);
+        }
+    }
+
+    if (job_status == 3 * NO_OF_DEPTS)
+    {
+        syslog(LOG_INFO, "[TRANSFER] All reports are transferred and backed-up successfully");
+    }
+
+    exit(EXIT_SUCCESS);
 }

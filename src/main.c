@@ -8,8 +8,6 @@ int main(int argc, char *argv[])
 {
     time_t now;
     struct tm *current_time;
-    bool is_checked = false;
-    bool is_transferred = false;
     pid_t dir_monitor_pid;
 
     openlog(LOG_IDENT, LOG_PID, LOG_USER);
@@ -34,7 +32,7 @@ int main(int argc, char *argv[])
     // Exit if fork fails
     if (dir_monitor_pid < 0)
     {
-        syslog(LOG_ERR, "[INIT] Failed to fork process");
+        syslog(LOG_ERR, "[INIT] Failed to fork directory monitoring process");
         closelog();
         exit(EXIT_FAILURE);
     }
@@ -52,25 +50,94 @@ int main(int argc, char *argv[])
         current_time = localtime(&now);
 
         // if its 11.30pm, check if they upload reports
-        if (current_time->tm_hour == 23 && current_time->tm_min >= 30 && is_checked == false)
+        if (current_time->tm_hour == 23 && current_time->tm_min == 30)
         {
-            if (check_upload(*current_time) == 0)
+            pid_t child_pid = fork();
+            // Exit if fork fails
+            if (child_pid < 0)
             {
-                is_checked = true;
+                syslog(LOG_ERR, "[CHECK] Failed to fork reports checking process");
+            }
+            // Child process: Check reports
+            if (child_pid == 0)
+            {
+                check_upload(*current_time);
             }
         }
         // if its 1pm, lock upload and report folders
-        if (current_time->tm_hour == 1 && is_checked == true && is_transferred == false)
+        if (current_time->tm_hour == 1 && current_time->tm_min == 0)
         {
-            // TODO: lock folders
-            // TODO: transfer reports
-            is_checked = false;
-            is_transferred = true;
-        }
-        // TODO: backup reporting folder as well
+            pid_t child_pid = fork();
+            // if fork fails
+            if (child_pid < 0)
+            {
+                syslog(LOG_ERR, "[TRANSFER] Failed to fork lock directories process");
+            }
+            // Child process: Lock directories
+            if (child_pid == 0)
+            {
+                int lock_status = 0;
 
+                lock_status += lock_dir(UPLOAD_DIR);
+                lock_status += lock_dir(REPORTING_DIR);
+
+                if (lock_status < 0)
+                {
+                    sleep(30);
+                    lock_status = 0;
+                    lock_status += lock_dir(UPLOAD_DIR);
+                    lock_status += lock_dir(REPORTING_DIR);
+
+                    if (lock_status < 0)
+                    {
+                        syslog(LOG_ERR, "[TRANSFER] Failed to lock down directories twice, backup and transfer process terminated");
+                        exit(EXIT_FAILURE);
+                    }
+                }
+                
+                pid_t cchild_pid;
+
+                cchild_pid = fork();
+
+                if (cchild_pid < 0)
+                {
+                    syslog(LOG_ERR, "[TRANSFER] Failed to fork backup and transfer process");
+                }
+                // Child process: Backup & transfer reports
+                if (cchild_pid == 0)
+                {
+                    time_t yesterday = now - 24*60*60;
+                    struct tm *timeinfo = localtime(&yesterday);
+
+                    auto_backup_transfer_reports(*timeinfo);
+                }
+                
+                // Parent process: Wait & Unlock directories
+                waitpid(cchild_pid, NULL, 0);
+
+                int unlock_status = 0;
+
+                unlock_status += unlock_dir(UPLOAD_DIR, 0770);
+                unlock_status += unlock_dir(REPORTING_DIR, 0750);
+
+                if (unlock_status < 0)
+                {
+                    sleep(30);
+                    unlock_status = 0;
+                    unlock_status += unlock_dir(UPLOAD_DIR, 0770);
+                    unlock_status += unlock_dir(REPORTING_DIR, 0750);
+
+                    if (unlock_status < 0)
+                    {
+                        syslog(LOG_ERR, "[TRANSFER] Failed to unlock directories twice, please unlock them manually");
+                        exit(EXIT_FAILURE);
+                    }
+                }
+
+                exit(EXIT_SUCCESS);
+            }
+        }
         sleep(60);
-        break;
     }
 
     syslog(LOG_INFO, "Daemon terminated");
