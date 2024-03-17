@@ -117,10 +117,14 @@ void auto_backup_transfer_reports(struct tm timeinfo)
     int report_status[NO_OF_DEPTS] = {0, 0, 0, 0};
     int job_status = 0;
 
+    syslog(LOG_DEBUG, "[DEBUG] before report_name_today()");
+
     for (int i = 0; i < NO_OF_DEPTS; i++)
     {
         report_name_today(report_names[i], sizeof(report_names[i]), report_prefixes[i], timeinfo);
     }
+
+    syslog(LOG_DEBUG, "[DEBUG] before report_name_today()");
 
     DIR *dir = opendir(UPLOAD_DIR);
     struct dirent *entry;
