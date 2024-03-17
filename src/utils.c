@@ -156,8 +156,7 @@ void auto_backup_transfer_reports(struct tm timeinfo)
         snprintf(reporting_path, sizeof(reporting_path), "%s/%s", REPORTING_DIR, filename);
 
         pid_t transfer_pid = fork();
-        int transfer_status;
-
+        
         if (transfer_pid < 0)
         {
             syslog(LOG_ERR, "[TRANSFER] Failed to fork transfer process for %s", filename);
@@ -170,8 +169,10 @@ void auto_backup_transfer_reports(struct tm timeinfo)
             exit(EXIT_SUCCESS);
         }
 
+        int transfer_status;
+
         pid_t backup_pid = fork();
-        int backup_status;
+        
 
         if (backup_pid < 0)
         {
@@ -185,15 +186,18 @@ void auto_backup_transfer_reports(struct tm timeinfo)
             exit(EXIT_SUCCESS);
         }
 
+        int backup_status;
         // Parent process: Auto backup & transfer reports
         waitpid(transfer_pid, &transfer_status, 0);
         waitpid(backup_pid, &backup_status, 0);
 
+        syslog(LOG_DEBUG, "[DEBUG] transfer_status exit: %d", WIFEXITED(transfer_status));
         syslog(LOG_DEBUG, "[DEBUG] transfer_status: %d", WEXITSTATUS(transfer_status));
         if (WIFEXITED(transfer_status) && WEXITSTATUS(transfer_status) == 0)
         {
             report_status[report_index]++;
         }
+        syslog(LOG_DEBUG, "[DEBUG] backup_status exit: %d", WIFEXITED(backup_status));
         syslog(LOG_DEBUG, "[DEBUG] backup_status: %d", WEXITSTATUS(backup_status));
 
         if (WIFEXITED(backup_status) && WEXITSTATUS(backup_status))
