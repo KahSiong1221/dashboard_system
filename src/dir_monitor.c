@@ -1,7 +1,5 @@
 #include "dir_monitor.h"
 
-volatile sig_atomic_t monitor_term_flag = 0;
-
 void monitor_signal_handler(int sig)
 {
     switch (sig)
