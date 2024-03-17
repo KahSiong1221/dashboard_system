@@ -156,14 +156,10 @@ int main(int argc, char *argv[])
     // Parent process: Main daemon
     daemon_work();
 
-    syslog(LOG_DEBUG, "I'm here yo, that pid is %d", dir_monitor_pid);
-
     if (kill(dir_monitor_pid, SIGUSR2) < 0)
     {
         syslog(LOG_ERR, "Failed to send termination signal to directory monitor");
     }
-
-    waitpid(dir_monitor_pid, NULL, 0);
 
     syslog(LOG_INFO, "Daemon shutting down");
     closelog();
