@@ -84,7 +84,7 @@ int is_report(const char *filename, const char *report_names[])
 {
     for (int i = 0; i < NO_OF_DEPTS; ++i)
     {
-        if(strcmp(filename, report_names[i]) == 0)
+        if (strcmp(filename, report_names[i]) == 0)
         {
             return i;
         }
@@ -100,18 +100,26 @@ void copy_report(const char *source_path, const char *target_path)
     exit(EXIT_FAILURE);
 }
 
+void remove_report(const char *source_path)
+{
+    execl("/bin/rm", "rm", source_path, NULL);
+    // if execl failed
+    syslog(LOG_ERR, "[Transfer] Failed to remove %s: %m", source_path);
+    exit(EXIT_FAILURE);
+}
+
 void auto_backup_transfer_reports(struct tm timeinfo)
 {
     const char *report_prefixes[] = {REPORT_PREFIXES};
     char report_names[NO_OF_DEPTS][100];
     int report_status[NO_OF_DEPTS] = {0, 0, 0, 0};
     int job_status = 0;
-    
+
     for (int i = 0; i < NO_OF_DEPTS; i++)
     {
         report_name_today(report_names[i], sizeof(report_names[i]), report_prefixes[i], timeinfo);
     }
-    
+
     DIR *dir = opendir(UPLOAD_DIR);
     struct dirent *entry;
 
@@ -133,6 +141,7 @@ void auto_backup_transfer_reports(struct tm timeinfo)
 
         if (report_index < 0)
         {
+            syslog(LOG_WARNING, "[TRANSFER] Unknown file %s in %s: not follow file naming convention of report is out of date", filename, UPLOAD_DIR);
             continue;
         }
 
@@ -155,7 +164,7 @@ void auto_backup_transfer_reports(struct tm timeinfo)
         // Child process: Transfer reports
         if (transfer_pid == 0)
         {
-            copy_reports(source_path, reporting_path);
+            copy_report(source_path, reporting_path);
             exit(EXIT_SUCCESS);
         }
 
@@ -170,7 +179,7 @@ void auto_backup_transfer_reports(struct tm timeinfo)
         // Child process: Backup reports
         if (backup_pid == 0)
         {
-            copy_reports(source_path, backup_path);
+            copy_report(source_path, backup_path);
             exit(EXIT_SUCCESS);
         }
 
@@ -186,8 +195,24 @@ void auto_backup_transfer_reports(struct tm timeinfo)
         {
             report_status[report_index] += 2;
         }
+
+        pid_t clean_pid = fork();
+
+        if (clean_pid < 0)
+        {
+            syslog(LOG_ERR, "[TRANSFER] Failed to fork cleaning process for %s", filename);
+            continue;
+        }
+        // Child process: Clean report
+        if (clean_pid == 0)
+        {
+            remove_report(source_path);
+            exit(EXIT_SUCCESS);
+        }
+
+        waitpid(clean_pid, NULL, 0);
     }
-    
+
     for (int i = 0; i < NO_OF_DEPTS; i++)
     {
         job_status += report_status[i];
