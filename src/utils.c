@@ -96,7 +96,7 @@ int is_report(const char *filename, char report_names[NO_OF_DEPTS][100])
 
 void copy_report(const char *source_path, const char *target_path)
 {
-    execl("/bin/cp", "/bin/cp", source_path, target_path, (char *)0);
+    execlp("/bin/cp", "cp", source_path, target_path, (char *)0);
     // if execl failed
     syslog(LOG_ERR, "[Transfer] Failed to copy %s to %s: %m", source_path, target_path);
     exit(EXIT_FAILURE);
@@ -104,7 +104,7 @@ void copy_report(const char *source_path, const char *target_path)
 
 void remove_report(const char *source_path)
 {
-    execl("/bin/rm", "rm", source_path, NULL);
+    execlp("/bin/rm", "rm", source_path, NULL);
     // if execl failed
     syslog(LOG_ERR, "[Transfer] Failed to remove %s: %m", source_path);
     exit(EXIT_FAILURE);
@@ -115,7 +115,7 @@ void auto_backup_transfer_reports(struct tm timeinfo)
     const char *report_prefixes[] = {REPORT_PREFIXES};
     char report_names[NO_OF_DEPTS][100];
     int report_status[NO_OF_DEPTS] = {0, 0, 0, 0};
-    int job_status = 0;
+    int transfer_status, backup_status, job_status = 0;
 
     for (int i = 0; i < NO_OF_DEPTS; i++)
     {
@@ -162,10 +162,7 @@ void auto_backup_transfer_reports(struct tm timeinfo)
         if (transfer_pid == 0)
         {
             copy_report(source_path, REPORTING_DIR);
-            exit(EXIT_SUCCESS);
         }
-
-        int transfer_status;
 
         pid_t backup_pid = fork();
         
@@ -179,13 +176,11 @@ void auto_backup_transfer_reports(struct tm timeinfo)
         if (backup_pid == 0)
         {
             copy_report(source_path, BACKUP_DIR);
-            exit(EXIT_SUCCESS);
         }
 
-        int backup_status;
         // Parent process: Auto backup & transfer reports
-        waitpid(transfer_pid, &transfer_status, 0);
-        waitpid(backup_pid, &backup_status, 0);
+        waitpid(transfer_pid, &transfer_status, WNOHANG);
+        waitpid(backup_pid, &backup_status, WNOHANG);
 
         syslog(LOG_DEBUG, "[DEBUG] transfer_status exit: %d", WIFEXITED(transfer_status));
         syslog(LOG_DEBUG, "[DEBUG] transfer_status: %d", WEXITSTATUS(transfer_status));

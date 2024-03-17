@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
             }
         }
         // if its 1pm, lock upload and report folders
-        if (current_time->tm_hour == 19 && current_time->tm_min == 16)
+        if (current_time->tm_hour == 20 && current_time->tm_min == 0)
         {
             pid_t child_pid = fork();
             // if fork fails
