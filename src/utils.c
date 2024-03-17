@@ -113,7 +113,7 @@ void remove_report(const char *source_path)
 void auto_backup_transfer_reports(struct tm timeinfo)
 {
     const char *report_prefixes[] = {REPORT_PREFIXES};
-    char report_names[NO_OF_DEPTS][100];
+    char *report_names[100];
     int report_status[NO_OF_DEPTS] = {0, 0, 0, 0};
     int job_status = 0;
 
