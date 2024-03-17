@@ -29,7 +29,6 @@ int main(int argc, char *argv[])
     //    perform transfer when get signal2
     // TODO: a separate program to receive signal from user in CLI
 
-
     // Initialise a directory monitor in a child process
     dir_monitor_pid = fork();
     // Exit if fork fails
@@ -40,7 +39,8 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
     // Child process: Directory monitor
-    if (dir_monitor_pid == 0) {
+    if (dir_monitor_pid == 0)
+    {
         dir_monitor();
     }
 

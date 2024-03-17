@@ -11,6 +11,6 @@
 #define EVENT_SIZE (sizeof(struct inotify_event))
 #define BUFFER_LEN (1024 * (EVENT_SIZE + 16))
 
-void dir_monitor_test();
+void dir_monitor();
 
 #endif // DIR_MONITOR_H
