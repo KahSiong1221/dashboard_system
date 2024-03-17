@@ -96,7 +96,7 @@ int is_report(const char *filename, char report_names[NO_OF_DEPTS][100])
 
 void copy_report(const char *source_path, const char *target_path)
 {
-    int result = execl("/bin/cp", "/bin/cp", source_path, target_path, (char *)0);
+    execl("/bin/cp", "/bin/cp", source_path, target_path, (char *)0);
     // if execl failed
     syslog(LOG_ERR, "[Transfer] Failed to copy %s to %s: %m", source_path, target_path);
     exit(EXIT_FAILURE);
