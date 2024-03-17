@@ -149,6 +149,8 @@ void auto_backup_transfer_reports(struct tm timeinfo)
         const char *filename = entry->d_name;
         int report_index = is_report(filename, report_names);
 
+        syslog(LOG_DEBUG, "[DEBUG] after is_report");
+
         if (report_index < 0)
         {
             syslog(LOG_WARNING, "[TRANSFER] Unknown file %s in %s: not follow file naming convention of report is out of date", filename, UPLOAD_DIR);
@@ -162,6 +164,8 @@ void auto_backup_transfer_reports(struct tm timeinfo)
         snprintf(source_path, sizeof(source_path), "%s/%s", UPLOAD_DIR, filename);
         snprintf(backup_path, sizeof(backup_path), "%s/%s", BACKUP_DIR, filename);
         snprintf(reporting_path, sizeof(reporting_path), "%s/%s", REPORTING_DIR, filename);
+
+        syslog(LOG_DEBUG, "[DEBUG] after snprintfssss");
 
         pid_t transfer_pid = fork();
         int transfer_status;
