@@ -4,11 +4,12 @@ volatile sig_atomic_t monitor_term_flag = 0;
 
 void monitor_signal_handler(int sig)
 {
-    switch(sig)
+    switch (sig)
     {
-        case SIGTERM:
-            monitor_term_flag = 1;
-            break;
+    case SIGTERM:
+        syslog(LOG_DEBUG, "I'm here yo, i got term sig");
+        monitor_term_flag = 1;
+        break;
     }
 }
 
@@ -84,6 +85,8 @@ void dir_monitor()
             i += EVENT_SIZE + event->len;
         }
     }
+
+    syslog(LOG_DEBUG, "I'm here yo, am i closing the monitor?");
 
     inotify_rm_watch(inotify_fd, wd);
     close(inotify_fd);
