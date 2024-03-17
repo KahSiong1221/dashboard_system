@@ -148,12 +148,8 @@ void auto_backup_transfer_reports(struct tm timeinfo)
         }
 
         char source_path[256];
-        char backup_path[256];
-        char reporting_path[256];
 
         snprintf(source_path, sizeof(source_path), "%s/%s", UPLOAD_DIR, filename);
-        snprintf(backup_path, sizeof(backup_path), "%s/%s", BACKUP_DIR, filename);
-        snprintf(reporting_path, sizeof(reporting_path), "%s/%s", REPORTING_DIR, filename);
 
         pid_t transfer_pid = fork();
         
@@ -165,7 +161,7 @@ void auto_backup_transfer_reports(struct tm timeinfo)
         // Child process: Transfer reports
         if (transfer_pid == 0)
         {
-            copy_report(source_path, reporting_path);
+            copy_report(source_path, REPORTING_DIR);
             exit(EXIT_SUCCESS);
         }
 
@@ -182,7 +178,7 @@ void auto_backup_transfer_reports(struct tm timeinfo)
         // Child process: Backup reports
         if (backup_pid == 0)
         {
-            copy_report(source_path, backup_path);
+            copy_report(source_path, BACKUP_DIR);
             exit(EXIT_SUCCESS);
         }
 
