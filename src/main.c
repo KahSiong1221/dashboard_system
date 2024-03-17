@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
             }
         }
         // if its 1pm, lock upload and report folders
-        if (current_time->tm_hour == 17 && current_time->tm_min == 2)
+        if (current_time->tm_hour == 17 && current_time->tm_min == 30)
         {
             pid_t child_pid = fork();
             // if fork fails
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
                         exit(EXIT_FAILURE);
                     }
                 }
-                
+
                 syslog(LOG_INFO, "[TRANSFER] Locked %s and %s for reports transfer and backup", UPLOAD_DIR, REPORTING_DIR);
 
                 pid_t cchild_pid;
@@ -108,12 +108,12 @@ int main(int argc, char *argv[])
                 // Child process: Backup & transfer reports
                 if (cchild_pid == 0)
                 {
-                    time_t yesterday = now - 24*60*60;
+                    time_t yesterday = now - 24 * 60 * 60;
                     struct tm *timeinfo = localtime(&yesterday);
 
                     auto_backup_transfer_reports(*timeinfo);
                 }
-                
+
                 // Parent process: Wait & Unlock directories
                 waitpid(cchild_pid, NULL, 0);
 
