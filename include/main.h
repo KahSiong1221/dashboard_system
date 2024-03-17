@@ -11,5 +11,6 @@
 #include "config.h"
 #include "utils.h"
 #include "dir_monitor.h"
+#include "signal_handler.h"
 
 #endif // MAIN_H
