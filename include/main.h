@@ -8,5 +8,6 @@
 #include "init.h"
 #include "config.h"
 #include "utils.h"
+#include "dir_monitor.h"
 
 #endif // MAIN_H
