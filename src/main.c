@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 
     mkdir_if_not_exists(STORAGE_DIR, 0770);
     mkdir_if_not_exists(UPLOAD_DIR, 0770);
-    mkdir_if_not_exists(BACKUP_DIR, 0750);
+    mkdir_if_not_exists(BACKUP_DIR, 0770);
     mkdir_if_not_exists(REPORTING_DIR, 0750);
 
     // Transform into a daemon process
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
             }
         }
         // if its 1pm, lock upload and report folders
-        if (current_time->tm_hour == 18 && current_time->tm_min == 4)
+        if (current_time->tm_hour == 18 && current_time->tm_min == 17)
         {
             pid_t child_pid = fork();
             // if fork fails

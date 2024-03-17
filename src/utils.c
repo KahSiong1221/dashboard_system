@@ -117,19 +117,13 @@ void auto_backup_transfer_reports(struct tm timeinfo)
     int report_status[NO_OF_DEPTS] = {0, 0, 0, 0};
     int job_status = 0;
 
-    syslog(LOG_DEBUG, "[DEBUG] before report_name_today()");
-
     for (int i = 0; i < NO_OF_DEPTS; i++)
     {
         report_name_today(report_names[i], sizeof(report_names[i]), report_prefixes[i], timeinfo);
     }
 
-    syslog(LOG_DEBUG, "[DEBUG] after report_name_today()");
-
     DIR *dir = opendir(UPLOAD_DIR);
     struct dirent *entry;
-
-    syslog(LOG_DEBUG, "[DEBUG] after opendir()");
 
     if (dir == NULL)
     {
@@ -144,12 +138,8 @@ void auto_backup_transfer_reports(struct tm timeinfo)
             continue;
         }
 
-        syslog(LOG_DEBUG, "[DEBUG] one of the file in directory");
-
         const char *filename = entry->d_name;
         int report_index = is_report(filename, report_names);
-
-        syslog(LOG_DEBUG, "[DEBUG] after is_report");
 
         if (report_index < 0)
         {
@@ -164,8 +154,6 @@ void auto_backup_transfer_reports(struct tm timeinfo)
         snprintf(source_path, sizeof(source_path), "%s/%s", UPLOAD_DIR, filename);
         snprintf(backup_path, sizeof(backup_path), "%s/%s", BACKUP_DIR, filename);
         snprintf(reporting_path, sizeof(reporting_path), "%s/%s", REPORTING_DIR, filename);
-
-        syslog(LOG_DEBUG, "[DEBUG] after snprintfssss");
 
         pid_t transfer_pid = fork();
         int transfer_status;
@@ -210,6 +198,8 @@ void auto_backup_transfer_reports(struct tm timeinfo)
             report_status[report_index] += 2;
         }
 
+        syslog(LOG_DEBUG, "[DEBUG] report status: %d %d %d %d", report_status[0], report_status[1], report_status[2], report_status[3]);
+
         pid_t clean_pid = fork();
 
         if (clean_pid < 0)
@@ -226,6 +216,8 @@ void auto_backup_transfer_reports(struct tm timeinfo)
 
         waitpid(clean_pid, NULL, 0);
     }
+
+    syslog(LOG_DEBUG, "[DEBUG] report status: %d %d %d %d", report_status[0], report_status[1], report_status[2], report_status[3]);
 
     for (int i = 0; i < NO_OF_DEPTS; i++)
     {
