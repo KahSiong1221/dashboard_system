@@ -4,7 +4,9 @@
 #include <stdlib.h>
 #include <syslog.h>
 #include <time.h>
+#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include "init.h"
 #include "config.h"
 #include "utils.h"
