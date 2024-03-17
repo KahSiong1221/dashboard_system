@@ -124,10 +124,12 @@ void auto_backup_transfer_reports(struct tm timeinfo)
         report_name_today(report_names[i], sizeof(report_names[i]), report_prefixes[i], timeinfo);
     }
 
-    syslog(LOG_DEBUG, "[DEBUG] before report_name_today()");
+    syslog(LOG_DEBUG, "[DEBUG] after report_name_today()");
 
     DIR *dir = opendir(UPLOAD_DIR);
     struct dirent *entry;
+
+    syslog(LOG_DEBUG, "[DEBUG] after opendir()");
 
     if (dir == NULL)
     {
@@ -141,6 +143,8 @@ void auto_backup_transfer_reports(struct tm timeinfo)
         {
             continue;
         }
+
+        syslog(LOG_DEBUG, "[DEBUG] one of the file in directory");
 
         const char *filename = entry->d_name;
         int report_index = is_report(filename, report_names);
