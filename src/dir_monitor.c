@@ -1,17 +1,5 @@
 #include "dir_monitor.h"
 
-volatile sig_atomic_t monitor_term_flag = 0;
-
-void monitor_signal_handler(int sig)
-{
-    switch (sig)
-    {
-    case SIGUSR2:
-        monitor_term_flag = 1;
-        break;
-    }
-}
-
 void dir_monitor()
 {
     errno = 0;
@@ -19,8 +7,6 @@ void dir_monitor()
     char buffer[BUFFER_LEN];
     ssize_t bytes_read;
     struct inotify_event *event;
-
-    signal(SIGUSR2, monitor_signal_handler);
 
     inotify_fd = inotify_init();
 
@@ -52,11 +38,6 @@ void dir_monitor()
         {
             syslog(LOG_WARNING, "[MONITOR] Failed to read inotify event: $m");
             continue;
-        }
-
-        if (monitor_term_flag == 1)
-        {
-            break;
         }
 
         // Loop through all events in the buffer

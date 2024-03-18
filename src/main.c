@@ -236,6 +236,8 @@ int main(int argc, char *argv[])
         syslog(LOG_ERR, "Failed to send termination signal to directory monitor");
     }
 
+    syslog(LOG_INFO, "[MONITOR] Directory monitor shutting down");
+
     syslog(LOG_INFO, "Daemon shutting down");
     closelog();
     exit(EXIT_SUCCESS);
