@@ -240,7 +240,6 @@ void manual_backup_transfer_reports()
 {
     const char *report_prefixes[] = {REPORT_PREFIXES};
     int report_count = 0;
-    int job_status = 0;
 
     DIR *dir = opendir(UPLOAD_DIR);
     struct dirent *entry;
