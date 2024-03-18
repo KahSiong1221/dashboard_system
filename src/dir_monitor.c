@@ -1,13 +1,13 @@
 #include "dir_monitor.h"
 
-volatile sig_atomic_t term_flag = 0;
+volatile sig_atomic_t monitor_term_flag = 0;
 
 void monitor_signal_handler(int sig)
 {
     switch (sig)
     {
     case SIGUSR2:
-        term_flag = 1;
+        monitor_term_flag = 1;
         break;
     }
 }
@@ -54,7 +54,7 @@ void dir_monitor()
             continue;
         }
 
-        if (term_flag == 1)
+        if (monitor_term_flag == 1)
         {
             break;
         }
