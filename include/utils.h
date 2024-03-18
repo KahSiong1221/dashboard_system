@@ -23,5 +23,8 @@ void auto_backup_transfer_reports(struct tm);
 void copy_report(const char *, const char *);
 void remove_report(const char *);
 int is_report(const char *, char[NO_OF_DEPTS][100]);
+void manual_backup_transfer_reports();
+int is_xml_file(const char *);
+int is_allowed_prefix(const char *, const char *[]);
 
 #endif // UTILS_H
