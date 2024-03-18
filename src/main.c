@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
     // Parent process: Main daemon
     daemon_work();
 
-    if (kill(dir_monitor_pid, SIGUSR2) < 0)
+    if (kill(dir_monitor_pid, SIGINT) < 0)
     {
         syslog(LOG_ERR, "Failed to send termination signal to directory monitor");
     }
